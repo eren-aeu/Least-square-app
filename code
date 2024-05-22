@@ -1,0 +1,109 @@
+def bestFitCoeffMatrix(data, polyDegree): #what is new compared to what we have done in the class?
+    
+    # Construction of matrix A
+    A = matrix(QQ, len(data), polyDegree + 1)
+    
+    for i in range(len(data)):
+        for j in range(polyDegree + 1):
+            A[i, j] = data[i][0] ** (polyDegree - j) #instead of i + 1, we use data[1][0] in case 
+                                                     #we have a different data not as such: ([1,x], [2,y], ...)
+    
+    # Construction of matrix Y
+    Y = matrix(QQ, len(data), 1, [d[1] for d in data])
+    
+    # Calculation of matrix M
+    M = (A.transpose() * A).inverse() * A.transpose()
+    
+    # Calculation of matrix X
+    X = M * Y #in the notes, P = A * M but for the result we do not need the projection matrix
+    X = vector(X) #to have a nice representation
+    return X
+    
+
+
+def bestFitPoly(X):
+    #representaion of a polynomial given the coefficient matrix
+    x = var('x')
+    g = 0
+    for i in range(len(X)):
+        g += X[i] * x ** (len(X) - i - 1)
+    return g
+
+def graph(data, PolyDeg):
+    #plots the data and polynomial together
+    B = bestFitCoeffMatrix(data, PolyDeg)
+    g = bestFitPoly(B)
+    
+    G = plot([])
+    G += list_plot(data, size = 20, color = 'red', 
+    xmin = 0, xmax = 12, ymin = -5, ymax = 80)
+    G += g.plot(xmin=0,xmax=12,ymin=-5,ymax=80)
+    return G
+    
+
+
+def userInterfaceBestFit():
+    #to have a nice and interactive interface
+    
+    data_lenght = input("how many points do you want to add?")
+
+    
+    # Convert the input to an integer from a stirng
+    try:
+        data_lenght = int(data_lenght)
+        
+    except ValueError:
+        print("Please enter a valid integer.")
+
+    #feed the data
+    data = list()
+    for i in range(data_lenght):
+        newData = input("give a new data: ")
+        try:
+            newData = int(newData)
+        
+        except ValueError:
+            print("Please enter a valid integer.")
+            
+        data.append([i + 1, newData])
+
+    #create the plot for data
+    G = plot([])
+    G += list_plot(data, size = 20, color = 'red', 
+    xmin = 0, xmax = 12, ymin = -5, ymax = 80)
+    show(G)
+
+    #write down the degree
+    degree = input("which degree of approximation you would like?: ")
+
+    try:
+        degree = int(degree)
+        
+    except ValueError:
+        print("Please enter a valid integer.")
+
+    if (degree >= data_lenght): #every poly of degree greater than len(data) - 1 will be the same lagrange poly. Therefore no higher degree.
+        print("You passed beyond Lagrange!!")
+
+    else:
+        B = bestFitCoeffMatrix(data, degree)
+        P = bestFitPoly(B)
+        show(P)
+        show(graph(data, degree))
+
+    question = input("would you like to see how bad were lagrange? Y/N: ") #if we were doing an interpolation, we would have seen that 
+                                                                           #the approximation (L_2, L_inf, differentials etc.) are very bad.
+
+    #no need to add a seperate function for Lagrange, it is just bestFitPoly of degree len(data) - 1
+    if (question == 'Y'):
+        show(graph(data, len(data) - 1)) #len(data) - 1 because a polynomial of degree n has n+1 terms/coefficiants
+
+    else:
+        print("Tchüss!")
+    
+    
+    
+    
+userInterfaceBestFit()
+
+ 
